@@ -86,10 +86,11 @@ CIdsSimpleLiveDlg::CIdsSimpleLiveDlg(CWnd* pParent /*=NULL*/)
 
 void CIdsSimpleLiveDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
-    //{{AFX_DATA_MAP(CIdsSimpleLiveDlg)
-    // NOTE: the ClassWizard will add DDX and DDV calls here
-    //}}AFX_DATA_MAP
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CIdsSimpleLiveDlg)
+	// NOTE: the ClassWizard will add DDX and DDV calls here
+	//}}AFX_DATA_MAP
+	DDX_Control(pDX, IDC_EDIT2, textBox);
 }
 
 BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
@@ -247,8 +248,11 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
     {
 		int duration = 2500;
 
-		std::ifstream getconfig;
-		getconfig.open("config.txt");
+		std::ifstream f;
+		f.open("config.txt");
+		f >> duration;
+		f.close();
+		
 
 		double fps;
 
@@ -256,17 +260,19 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 
-		char* pcImageMem[2500];
-		INT id[2500];
+		/*char* pcImageMem[10000];
+		INT id[10000];*/
+		char** ppcImageMem = new char*[duration];
+		INT* pid = new INT[duration];
 		INT width = 120;
 		INT height = 120;
 		INT depth = 10;
 
-		for (int i = 0; i < 2500; i++)
+		for (int i = 0; i < duration; i++)
 		{
-			is_AllocImageMem(m_hCam, width, height, depth, &(pcImageMem[i]), &(id[i]));
-			is_AddToSequence(m_hCam, pcImageMem[i], id[i]);
-			is_SetAllocatedImageMem(m_hCam, width, height, depth, pcImageMem[i], &(id[i]));
+			is_AllocImageMem(m_hCam, width, height, depth, &(ppcImageMem[i]), &(pid[i]));
+			is_AddToSequence(m_hCam, ppcImageMem[i], pid[i]);
+			is_SetAllocatedImageMem(m_hCam, width, height, depth, ppcImageMem[i], &(pid[i]));
 		}
 		int diff;
 
@@ -286,7 +292,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		{
 			GetSystemTime(&time);
 			diff = (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
-			if (diff > timeout)
+			if (diff > duration)
 			{
 				go_on = 0;
 			}
@@ -299,9 +305,9 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 		int size = (width * int((depth + 7) / 8))*height;
 		std::ofstream binary_stream("sequence.bin", std::ios::binary);
-		for (int i = 0; i < 2500; i++)
+		for (int i = 0; i < duration; i++)
 		{
-			binary_stream.write(reinterpret_cast<char const *>(pcImageMem[i]), size);
+			binary_stream.write(reinterpret_cast<char const *>(ppcImageMem[i]), size);
 		}
 		binary_stream.close();
     }
@@ -521,6 +527,7 @@ void CIdsSimpleLiveDlg::OnClose()
     ExitCamera();
     CDialog::OnClose();
 }
+
 
 
 INT CIdsSimpleLiveDlg::InitCamera (HIDS *hCam, HWND hWnd)

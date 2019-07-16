@@ -116,6 +116,8 @@ private:
 
 	LRESULT OnUEyeMessage(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()  
+public:
+	CEdit textBox;
 };
 
 #endif // !defined(AFX_IDSSIMPLELIVEDLG_H__00EFA87C_7A28_4501_8760_D28D4F306A00__INCLUDED_)
