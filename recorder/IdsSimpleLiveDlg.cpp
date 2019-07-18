@@ -48,27 +48,6 @@ extern CIdsSimpleLiveApp theApp;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR     lpCmdLine,
-	int       nCmdShow)
-{
-	AllocConsole();
-
-	HANDLE handle_out = GetStdHandle(STD_OUTPUT_HANDLE);
-	int hCrt = _open_osfhandle((long)handle_out, _O_TEXT);
-	FILE* hf_out = _fdopen(hCrt, "w");
-	setvbuf(hf_out, NULL, _IONBF, 1);
-	*stdout = *hf_out;
-
-	HANDLE handle_in = GetStdHandle(STD_INPUT_HANDLE);
-	hCrt = _open_osfhandle((long)handle_in, _O_TEXT);
-	FILE* hf_in = _fdopen(hCrt, "r");
-	setvbuf(hf_in, NULL, _IONBF, 128);
-	*stdin = *hf_in;
-
-	// use the console just like a normal one - printf(), getchar(), ...
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // CIdsSimpleLiveDlg dialog
@@ -247,28 +226,30 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
     if ( m_hCam != 0 )
     {
 		int duration = 2500;
+		double fps;
 
 		std::ifstream f;
 		f.open("config.txt");
 		f >> duration;
+		f >> fps;
 		f.close();
 		
+		
+		int frameCount = duration*fps/1000;
 
-		double fps;
-
-		is_SetFrameRate(m_hCam, 1000, &fps);
+		is_SetFrameRate(m_hCam, fps, &fps);
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 
 		/*char* pcImageMem[10000];
 		INT id[10000];*/
-		char** ppcImageMem = new char*[duration];
-		INT* pid = new INT[duration];
+		char** ppcImageMem = new char*[frameCount];
+		INT* pid = new INT[frameCount];
 		INT width = 120;
 		INT height = 120;
 		INT depth = 10;
 
-		for (int i = 0; i < duration; i++)
+		for (int i = 0; i < frameCount; i++)
 		{
 			is_AllocImageMem(m_hCam, width, height, depth, &(ppcImageMem[i]), &(pid[i]));
 			is_AddToSequence(m_hCam, ppcImageMem[i], pid[i]);
@@ -285,7 +266,15 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		SYSTEMTIME time;
 		GetSystemTime(&starttime);
 
-		is_SetFrameRate(m_hCam, 1000, &fps);
+		is_SetFrameRate(m_hCam, fps, &fps);
+
+		
+		std::ofstream output;
+		output.open("output.txt");
+		output << fps;
+		output.close();
+	
+
 
 		is_CaptureVideo(m_hCam, IS_DONT_WAIT);
 		while (go_on)
@@ -305,7 +294,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 		int size = (width * int((depth + 7) / 8))*height;
 		std::ofstream binary_stream("sequence.bin", std::ios::binary);
-		for (int i = 0; i < duration; i++)
+		for (int i = 0; i < frameCount; i++)
 		{
 			binary_stream.write(reinterpret_cast<char const *>(ppcImageMem[i]), size);
 		}
@@ -368,7 +357,9 @@ bool CIdsSimpleLiveDlg::OpenCamera()
             // start live video
             is_CaptureVideo( m_hCam, IS_WAIT );
 			
-			//is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL || IS_SUBSAMPLING_2X_HORIZONTAL);//ADDED
+			//is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL || IS_SUBSAMPLING_2X_HORIZONTAL);
+
+
         }
         else
             AfxMessageBox(TEXT("Initializing the display mode failed!"), MB_ICONWARNING );

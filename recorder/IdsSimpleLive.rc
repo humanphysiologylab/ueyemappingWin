@@ -100,9 +100,10 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "&Start Live",IDC_BUTTON_START,334,7,83,20
     PUSHBUTTON      "S&top Live",IDC_BUTTON_STOP,334,32,83,20
-    PUSHBUTTON      "&Load Parameters",IDC_BUTTON_LOAD_PARAMETER,334,60,83,20
+    PUSHBUTTON      "&Start Capture",IDC_BUTTON_LOAD_PARAMETER,334,60,83,20
     PUSHBUTTON      "&Exit",IDC_BUTTON_EXIT,334,84,83,20
     CONTROL         "",IDC_DISPLAY,"Static",SS_BLACKFRAME | SS_SUNKEN,7,7,320,222
+    EDITTEXT        IDC_EDIT2,355,114,40,14,ES_AUTOHSCROLL | ES_NUMBER
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 207, 71
@@ -188,6 +189,17 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_IDSSIMPLELIVE_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
 
 
 /////////////////////////////////////////////////////////////////////////////
