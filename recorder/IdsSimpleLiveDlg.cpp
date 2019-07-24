@@ -267,6 +267,10 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		GetSystemTime(&starttime);
 
 		is_SetFrameRate(m_hCam, fps, &fps);
+		double exposure = 0;
+
+		//is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
+		is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);
 
 		
 		std::ofstream output;
@@ -356,8 +360,24 @@ bool CIdsSimpleLiveDlg::OpenCamera()
 
             // start live video
             is_CaptureVideo( m_hCam, IS_WAIT );
-			
-			//is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL || IS_SUBSAMPLING_2X_HORIZONTAL);
+
+			int duration = 2500;
+			double fps;
+			int gain;
+
+			std::ifstream f;
+			f.open("config.txt");
+			f >> duration;
+			f >> fps;
+			f >> gain;
+			f.close();
+
+			is_SetFrameRate(m_hCam, fps, &fps);
+
+			double exposure = 0;
+
+			is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
+			is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);
 
 
         }
@@ -498,7 +518,14 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
         //imageSize.s32Height = m_nSizeY;
         imageSize.s32Height = 120;
 
-        is_AOI(m_hCam, IS_AOI_IMAGE_SET_SIZE, (void*)&imageSize, sizeof(imageSize));
+		IS_RECT rectAOI;
+
+		rectAOI.s32Height = 120;
+		rectAOI.s32Width = 120;
+		rectAOI.s32X = 336;
+		rectAOI.s32Y = 240;
+
+        is_AOI(m_hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
 		
 		//double fps;
 
