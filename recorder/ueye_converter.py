@@ -1,19 +1,22 @@
 import scipy.io as sio
 import numpy as np
 
-load = np.fromfile("sequence.bin", dtype = 'int16', sep = "")
+width = 128
+height = 128
+
+load = np.fromfile("sequence4.bin", dtype = 'int16', sep = "")
 print("loaded")
 
-length = 5000
+length = 460
 
-cmosDataNp = np.zeros((120,120,length))
+cmosDataNp = np.zeros((width,height,length))
 
 for t in range(length):
     if t % 100 == 0:
         print(t, " ms done")
-    for i in range(120):
-        for j in range(120):
-            cmosDataNp[i,j,t] = load[j+i*120+t*14400]
+    for i in range(width):
+        for j in range(height):
+            cmosDataNp[i,j,t] = load[j+i*128+t*128*128]
 print("reshaped")
 
 mat_file = {}
@@ -44,7 +47,7 @@ mat_file['dual'] = 4
 
 #frequency
 
-mat_file['frequency'] = 1000
+mat_file['frequency'] = 230
 
 #cmosData2
 

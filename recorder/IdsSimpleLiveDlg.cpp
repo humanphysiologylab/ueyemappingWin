@@ -46,6 +46,8 @@ extern CIdsSimpleLiveApp theApp;
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#define WIDTH 256
+#define HEIGHT 256
 #endif
 
 
@@ -69,7 +71,7 @@ void CIdsSimpleLiveDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CIdsSimpleLiveDlg)
 	// NOTE: the ClassWizard will add DDX and DDV calls here
 	//}}AFX_DATA_MAP
-	DDX_Control(pDX, IDC_EDIT2, textBox);
+	//DDX_Control(pDX, IDC_EDIT2, textBox);
 }
 
 BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
@@ -109,8 +111,8 @@ BOOL CIdsSimpleLiveDlg::OnInitDialog()
 
     m_hCam = 0;
     m_nRenderMode = IS_RENDER_FIT_TO_WINDOW;
-    m_nPosX = 336;
-    m_nPosY = 240;
+    m_nPosX = 0;
+    m_nPosY = 0;
     m_nFlipHor = 0;
     m_nFlipVert = 0;
 
@@ -234,10 +236,9 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		f >> fps;
 		f.close();
 		
+		is_SetFrameRate(m_hCam, fps, &fps);
 		
 		int frameCount = duration*fps/1000;
-
-		is_SetFrameRate(m_hCam, fps, &fps);
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 
@@ -245,8 +246,8 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		INT id[10000];*/
 		char** ppcImageMem = new char*[frameCount];
 		INT* pid = new INT[frameCount];
-		INT width = 120;
-		INT height = 120;
+		INT width = WIDTH/2;
+		INT height = HEIGHT/2;
 		INT depth = 10;
 
 		for (int i = 0; i < frameCount; i++)
@@ -255,6 +256,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 			is_AddToSequence(m_hCam, ppcImageMem[i], pid[i]);
 			is_SetAllocatedImageMem(m_hCam, width, height, depth, ppcImageMem[i], &(pid[i]));
 		}
+
 		int diff;
 
 		bool go_on = 1;
@@ -482,7 +484,7 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
 
     // Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);
-    if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
+    /*if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
     {
         // setup the color depth to the current windows setting
         is_GetColorDepth(m_hCam, &m_nBitsPerPixel, &m_nColorMode);
@@ -493,16 +495,16 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
         m_nColorMode = IS_CM_BGRA8_PACKED;
         m_nBitsPerPixel = 32;
     }
-    else
-    {
+    else*/
+    
         // for monochrome camera models use Y8 mode
         m_nColorMode = IS_CM_MONO10;
         m_nBitsPerPixel = 10;
-    }
+    
 
 	
     //nRet = AllocImageMems(m_nSizeX, m_nSizeY, m_nBitsPerPixel);
-    nRet = AllocImageMems(120, 120, m_nBitsPerPixel);
+    nRet = AllocImageMems(WIDTH, HEIGHT, m_nBitsPerPixel);
 
     if (nRet == IS_SUCCESS)
     {
@@ -514,19 +516,23 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
         // set the image size to capture
         IS_SIZE_2D imageSize;
         //imageSize.s32Width = m_nSizeX;
-        imageSize.s32Width = 120;
+        imageSize.s32Width = WIDTH;
         //imageSize.s32Height = m_nSizeY;
-        imageSize.s32Height = 120;
+        imageSize.s32Height = HEIGHT;
 
 		IS_RECT rectAOI;
 
-		rectAOI.s32Height = 120;
-		rectAOI.s32Width = 120;
-		rectAOI.s32X = 336;
-		rectAOI.s32Y = 240;
+		rectAOI.s32Height = HEIGHT;
+		rectAOI.s32Width = WIDTH;
+		rectAOI.s32X = 0;
+		rectAOI.s32Y = 0;
+
+		
 
         is_AOI(m_hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-		
+	
+		is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL);
+
 		//double fps;
 
 		//is_SetFrameRate(m_hCam, 1000, &fps);
