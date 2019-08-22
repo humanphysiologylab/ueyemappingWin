@@ -1,13 +1,20 @@
 import scipy.io as sio
 import numpy as np
 
+meta = open("output.txt", "r")
+fps = meta.read()
+meta.close()
+
+meta = open("config.txt", "r")
+time = int(meta.readline())
+
+load = np.fromfile("sequence.bin", dtype = 'int16', sep = "")
+print("loaded")
+
 width = 128
 height = 128
 
-load = np.fromfile("sequence4.bin", dtype = 'int16', sep = "")
-print("loaded")
-
-length = 460
+length = int(load.size/(width*height))
 
 cmosDataNp = np.zeros((width,height,length))
 
@@ -43,23 +50,15 @@ mat_file['acqFreq'] = 2
 
 #dual
 
-mat_file['dual'] = 4
+mat_file['dual'] = 0
 
 #frequency
 
-mat_file['frequency'] = 230
-
-#cmosData2
-
-mat_file['cmosData2'] = []
+mat_file['frequency'] = fps
 
 #channel
 
 #mat_file['channel'] = [0, 0, 0, ..., 0, 0, 0]
-                                    
-#bgimage2
-
-mat_file['bgimage2'] = []
 
 #bgimage
 
