@@ -35,6 +35,7 @@
 
 #include "ueye.h"
 #include <vector>
+#include <string>
 
 enum _disp_mode
 {
@@ -116,8 +117,33 @@ private:
 
 	LRESULT OnUEyeMessage(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()  
+	CEdit editFps;
+	CEdit editGain;
+	CEdit editLength;
+
+	INT WIDTH;
+	INT HEIGHT;
+
+	INT DURATION;
+
 public:
-	//CEdit textBox;
+	//parameter controls
+	std::string GetGainStr();
+	std::string GetFPSStr();
+	std::string GetLengthStr();
+	void SetGainStr(double x);
+	void SetFPSStr(double x);
+	void SetLengthStr(double x);
+
+	void SetWidth(int width);
+	void SetHeight(int height);
+
+	int GetWidth();
+	int GetHeight();
+	int GetDuration();
+	void SetDuration(int duration);
+
+	afx_msg void OnStnClickedDisplay();
 };
 
 #endif // !defined(AFX_IDSSIMPLELIVEDLG_H__00EFA87C_7A28_4501_8760_D28D4F306A00__INCLUDED_)

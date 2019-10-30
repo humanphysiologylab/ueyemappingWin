@@ -1,5 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
+#pragma code_page(65001)
+
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -17,7 +19,6 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-#pragma code_page(1252)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -85,25 +86,29 @@ IDR_MAINFRAME           ICON                    "res\\IdsSimpleLive.ico"
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_IDSSIMPLELIVE_DIALOG DIALOGEX 0, 0, 424, 235
+IDD_IDSSIMPLELIVE_DIALOG DIALOGEX 0, 0, 425, 244
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "uEyeSimpleLive"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "&Start Live",IDC_BUTTON_START,334,7,83,20
-    PUSHBUTTON      "S&top Live",IDC_BUTTON_STOP,334,32,83,20
-    PUSHBUTTON      "&Start Capture",IDC_BUTTON_LOAD_PARAMETER,334,60,83,20
-    PUSHBUTTON      "&Exit",IDC_BUTTON_EXIT,334,84,83,20
-    CONTROL         "",IDC_DISPLAY,"Static",SS_BLACKFRAME | SS_SUNKEN,7,7,320,222
-    EDITTEXT        IDC_EDIT2,355,114,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "&Start Live",IDC_BUTTON_START,334,7,84,20
+    PUSHBUTTON      "S&top Live",IDC_BUTTON_STOP,334,32,84,20
+    PUSHBUTTON      "&Start Capture",IDC_BUTTON_LOAD_PARAMETER,334,60,84,20
+    PUSHBUTTON      "&Exit",IDC_BUTTON_EXIT,334,84,84,20
+    CONTROL         "",IDC_DISPLAY,"Static",SS_BLACKFRAME | SS_SUNKEN,7,7,320,219
+    EDITTEXT        IDC_EDIT_GAIN,378,111,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Gain",IDC_STATIC,334,113,16,8
+    LTEXT           "FPS",IDC_STATIC,334,131,18,11
+    EDITTEXT        IDC_EDIT_FPS,378,127,40,14,ES_AUTOHSCROLL
+    LTEXT           "Length(ms)",IDC_,334,146,36,8
+    EDITTEXT        IDC_EDIT_LENGTH,378,143,40,14,ES_AUTOHSCROLL
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 207, 71
@@ -148,7 +153,7 @@ BEGIN
             VALUE "FileDescription", "uEyeSimpleLive"
             VALUE "FileVersion", "4.91.0.0"
             VALUE "InternalName", "uEyeSimpleLive"
-            VALUE "LegalCopyright", "Copyright © 2004 - 2017"
+            VALUE "LegalCopyright", "Copyright Â© 2004 - 2017"
             VALUE "LegalTrademarks", "uEye"
             VALUE "OriginalFilename", "IdsSimpleLive.exe"
             VALUE "ProductName", "uEyeSimpleLive"
@@ -173,11 +178,11 @@ BEGIN
     IDD_IDSSIMPLELIVE_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 417
+        RIGHTMARGIN, 418
         VERTGUIDE, 327
         VERTGUIDE, 334
         TOPMARGIN, 7
-        BOTTOMMARGIN, 228
+        BOTTOMMARGIN, 237
     END
 
     IDD_ABOUTBOX, DIALOG

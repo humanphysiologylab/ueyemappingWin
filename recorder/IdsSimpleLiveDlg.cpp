@@ -26,9 +26,6 @@
 //                                                                           //
 //===========================================================================//
 
-// IdsSimpleLiveDlg.cpp : implementation file
-//
-
 #include "stdafx.h"
 #include "IdsSimpleLive.h"
 #include "IdsSimpleLiveDlg.h"
@@ -39,6 +36,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
+#include <sstream>
 
 extern CIdsSimpleLiveApp theApp;
 
@@ -46,8 +44,6 @@ extern CIdsSimpleLiveApp theApp;
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
-#define WIDTH 256
-#define HEIGHT 256
 #endif
 
 
@@ -68,10 +64,77 @@ CIdsSimpleLiveDlg::CIdsSimpleLiveDlg(CWnd* pParent /*=NULL*/)
 void CIdsSimpleLiveDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(CIdsSimpleLiveDlg)
-	// NOTE: the ClassWizard will add DDX and DDV calls here
-	//}}AFX_DATA_MAP
-	//DDX_Control(pDX, IDC_EDIT2, textBox);
+	DDX_Control(pDX, IDC_EDIT_GAIN, editGain);
+	DDX_Control(pDX, IDC_EDIT_FPS, editFps);
+	DDX_Control(pDX, IDC_EDIT_LENGTH, editLength);
+}
+
+std::string CIdsSimpleLiveDlg::GetGainStr()
+{
+	CString cs;
+	GetDlgItemText(IDC_EDIT_GAIN, cs);
+	CT2CA converted(cs);
+	std::string strStd(converted);
+	return strStd;
+}
+
+std::string CIdsSimpleLiveDlg::GetFPSStr()
+{
+  	CString cs;
+	GetDlgItemText(IDC_EDIT_FPS, cs);
+	CT2CA converted(cs);
+	std::string strStd(converted);
+	return strStd;
+}
+
+std::string CIdsSimpleLiveDlg::GetLengthStr()
+{
+	CString cs;
+	GetDlgItemText(IDC_EDIT_LENGTH, cs);
+	CT2CA converted(cs);
+	std::string strStd(converted);
+	return strStd;
+}
+
+void CIdsSimpleLiveDlg::SetGainStr(double x)
+{
+	CString str;
+	str.Format(_T("%g"),x);
+	SetDlgItemText(IDC_EDIT_GAIN, str);
+}
+
+void CIdsSimpleLiveDlg::SetFPSStr(double x)
+{
+	CString str;
+	str.Format(_T("%g"), x);
+	SetDlgItemText(IDC_EDIT_FPS, str);
+}
+
+void CIdsSimpleLiveDlg::SetLengthStr(double x)
+{
+	CString str;
+	str.Format(_T("%g"), x);
+	SetDlgItemText(IDC_EDIT_LENGTH, str);
+}
+
+void CIdsSimpleLiveDlg::SetWidth(int width)
+{
+	WIDTH = width;
+}
+
+void CIdsSimpleLiveDlg::SetHeight(int height)
+{
+	HEIGHT = height;
+}
+
+int CIdsSimpleLiveDlg::GetWidth()
+{
+	return WIDTH;
+}
+
+int CIdsSimpleLiveDlg::GetHeight()
+{
+	return HEIGHT;
 }
 
 BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
@@ -86,6 +149,7 @@ BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
     //}}AFX_MSG_MAP
     ON_BN_CLICKED(IDC_BUTTON_LOAD_PARAMETER, OnBnClickedButtonLoadParameter)
     ON_WM_CLOSE()
+	ON_STN_CLICKED(IDC_DISPLAY, &CIdsSimpleLiveDlg::OnStnClickedDisplay)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -116,6 +180,28 @@ BOOL CIdsSimpleLiveDlg::OnInitDialog()
     m_nFlipHor = 0;
     m_nFlipVert = 0;
 
+	// load parameters from config and display them
+	double duration = 5000;
+	double fps = 1000;
+	double gain = 400;
+	int width = 120;
+	int height = 120;
+
+	std::ifstream f;
+	f.open("config.txt");
+	f >> duration;
+	f >> fps;
+	f >> gain;
+	f >> width;
+	f >> height;
+	f.close();
+
+	SetLengthStr(duration);
+	SetFPSStr(fps);
+	SetGainStr(gain);
+	SetWidth(width);
+	SetHeight(height);
+	
     // open a camera handle
     OpenCamera();
 
@@ -181,11 +267,26 @@ void CIdsSimpleLiveDlg::OnButtonStart()
 
     if( m_hCam != 0 )
     {
+		double duration, fps, gain;
+		duration = std::stod(CIdsSimpleLiveDlg::GetLengthStr());
+		fps = std::stod(CIdsSimpleLiveDlg::GetFPSStr());
+		gain = std::stod(CIdsSimpleLiveDlg::GetGainStr());
+
+		std::ofstream o;
+		o.open("config.txt");
+		o << duration << std::endl;
+		o << fps << std::endl;
+		o << gain;
+		o << GetWidth();
+		o << GetHeight();
+		o.close();
+
         // Capture live video
         is_CaptureVideo( m_hCam, IS_WAIT );
+		is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
+		double exposure = 1000 / fps;
 
-        // Disable button 'Load Parameters'
-        //GetDlgItem(IDC_BUTTON_LOAD_PARAMETER)->EnableWindow(FALSE);  CHANGED
+		is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);       
     }
 	std::cout << "Done";
 }
@@ -222,32 +323,47 @@ void CIdsSimpleLiveDlg::OnButtonStop()
 ///////////////////////////////////////////////////////////////////////////////
 void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 {
+	
+
     if ( m_hCam == 0 )
         OpenCamera();
 
     if ( m_hCam != 0 )
     {
-		int duration = 2500;
+		int duration;
 		double fps;
+		double gain;
 
-		std::ifstream f;
-		f.open("config.txt");
-		f >> duration;
-		f >> fps;
-		f.close();
-		
+		duration = std::stod(CIdsSimpleLiveDlg::GetLengthStr());
+		fps = std::stod(CIdsSimpleLiveDlg::GetFPSStr());
+		gain = std::stod(CIdsSimpleLiveDlg::GetGainStr());
+
+		std::ofstream o;
+		o.open("config.txt");
+		o << duration << std::endl;
+		o << fps << std::endl;
+		o << gain;
+		o.close();
+
 		is_SetFrameRate(m_hCam, fps, &fps);
+
+		//CIdsSimpleLiveDlg::SetLengthStr(duration);
+		CIdsSimpleLiveDlg::SetFPSStr(fps);
+		//CIdsSimpleLiveDlg::SetGainStr(gain);
 		
 		int frameCount = duration*fps/1000;
 
+		std::ofstream f;
+		f.open("output.txt");
+		f << "Framecount: " << frameCount;
+		f.close();
+
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 
-		/*char* pcImageMem[10000];
-		INT id[10000];*/
 		char** ppcImageMem = new char*[frameCount];
 		INT* pid = new INT[frameCount];
-		INT width = WIDTH/2;
-		INT height = HEIGHT/2;
+		INT width = GetWidth();
+		INT height = GetHeight();
 		INT depth = 10;
 
 		for (int i = 0; i < frameCount; i++)
@@ -274,14 +390,6 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		//is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
 		is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);
 
-		
-		std::ofstream output;
-		output.open("output.txt");
-		output << fps;
-		output.close();
-	
-
-
 		is_CaptureVideo(m_hCam, IS_DONT_WAIT);
 		while (go_on)
 		{
@@ -305,6 +413,16 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 			binary_stream.write(reinterpret_cast<char const *>(ppcImageMem[i]), size);
 		}
 		binary_stream.close();
+		FreeImageMems();
+
+		//CIdsSimpleLiveDlg::OnButtonStart();
+
+		/*for (int i = 0; i < frameCount; i++)
+		{
+			//is_AllocImageMem(m_hCam, width, height, depth, &(ppcImageMem[i]), &(pid[i]));
+			is_FreeImageMem(m_hCam, ppcImageMem[i], pid[i]);
+			//is_SetAllocatedImageMem(m_hCam, width, height, depth, ppcImageMem[i], &(pid[i]));
+		}*/
     }
 }
 
@@ -374,9 +492,11 @@ bool CIdsSimpleLiveDlg::OpenCamera()
 			f >> gain;
 			f.close();
 
-			is_SetFrameRate(m_hCam, fps, &fps);
+			double defaultFps = 30;
 
-			double exposure = 0;
+			is_SetFrameRate(m_hCam, defaultFps, &defaultFps);
+
+			double exposure = 1000/fps;
 
 			is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
 			is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);
@@ -484,27 +604,14 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
 
     // Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);
-    /*if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
-    {
-        // setup the color depth to the current windows setting
-        is_GetColorDepth(m_hCam, &m_nBitsPerPixel, &m_nColorMode);
-    }
-    else if (m_sInfo.nColorMode == IS_COLORMODE_CBYCRY)
-    {
-        // for color camera models use RGB32 mode
-        m_nColorMode = IS_CM_BGRA8_PACKED;
-        m_nBitsPerPixel = 32;
-    }
-    else*/
     
-        // for monochrome camera models use Y8 mode
-        m_nColorMode = IS_CM_MONO10;
-        m_nBitsPerPixel = 10;
+    m_nColorMode = IS_CM_MONO10;
+    m_nBitsPerPixel = 10;
     
-
-	
-    //nRet = AllocImageMems(m_nSizeX, m_nSizeY, m_nBitsPerPixel);
-    nRet = AllocImageMems(WIDTH, HEIGHT, m_nBitsPerPixel);
+	int width = GetWidth();
+	int height = GetHeight();
+    
+	nRet = AllocImageMems(width, height, m_nBitsPerPixel);
 
     if (nRet == IS_SUCCESS)
     {
@@ -514,28 +621,24 @@ int CIdsSimpleLiveDlg::InitDisplayMode()
         is_SetColorMode(m_hCam, m_nColorMode);
 
         // set the image size to capture
-        IS_SIZE_2D imageSize;
+        //IS_SIZE_2D imageSize;
         //imageSize.s32Width = m_nSizeX;
-        imageSize.s32Width = WIDTH;
+        //imageSize.s32Width = WIDTH;
         //imageSize.s32Height = m_nSizeY;
-        imageSize.s32Height = HEIGHT;
+        //imageSize.s32Height = HEIGHT;
 
 		IS_RECT rectAOI;
 
-		rectAOI.s32Height = HEIGHT;
-		rectAOI.s32Width = WIDTH;
-		rectAOI.s32X = 0;
-		rectAOI.s32Y = 0;
+		rectAOI.s32Height = height;
+		rectAOI.s32Width = width;
+		rectAOI.s32X = (m_nSizeX - width)/2;
+		rectAOI.s32Y = (m_nSizeY - height)/2;
 
-		
+		//is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL);
 
         is_AOI(m_hCam, IS_AOI_IMAGE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-	
-		is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL);
 
-		//double fps;
-
-		//is_SetFrameRate(m_hCam, 1000, &fps);
+		//is_SetSubSampling(m_hCam, IS_SUBSAMPLING_2X_VERTICAL | IS_SUBSAMPLING_2X_HORIZONTAL);
     }
     else
     {
@@ -720,4 +823,9 @@ INT CIdsSimpleLiveDlg::GetLastMem(char** ppLastMem, INT& lMemoryId, INT& lSequen
     }
 
     return nRet;
+}
+
+void CIdsSimpleLiveDlg::OnStnClickedDisplay()
+{
+	// TODO: Add your control notification handler code here
 }
