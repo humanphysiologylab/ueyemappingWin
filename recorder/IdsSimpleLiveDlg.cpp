@@ -37,6 +37,8 @@
 #include <io.h>
 #include <fcntl.h>
 #include <sstream>
+#include <ctime>
+#include <algorithm>
 
 extern CIdsSimpleLiveApp theApp;
 
@@ -45,7 +47,6 @@ extern CIdsSimpleLiveApp theApp;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
 
 /////////////////////////////////////////////////////////////////////////////
 // CIdsSimpleLiveDlg dialog
@@ -155,6 +156,18 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CIdsSimpleLiveDlg message handlers
 
+void CIdsSimpleLiveDlg::OnOK(void)
+{
+	CWnd* pWnd = GetFocus();
+	if (GetDlgItem(IDOK) == pWnd)
+	{
+		CDialog::OnOK();
+		return;
+	}
+
+	OnButtonStart();
+}
+
 BOOL CIdsSimpleLiveDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
@@ -192,8 +205,6 @@ BOOL CIdsSimpleLiveDlg::OnInitDialog()
 	f >> duration;
 	f >> fps;
 	f >> gain;
-	f >> width;
-	f >> height;
 	f.close();
 
 	SetLengthStr(duration);
@@ -267,6 +278,8 @@ void CIdsSimpleLiveDlg::OnButtonStart()
 
     if( m_hCam != 0 )
     {
+		ExitCamera();
+		OpenCamera();
 		double duration, fps, gain;
 		duration = std::stod(CIdsSimpleLiveDlg::GetLengthStr());
 		fps = std::stod(CIdsSimpleLiveDlg::GetFPSStr());
@@ -277,8 +290,6 @@ void CIdsSimpleLiveDlg::OnButtonStart()
 		o << duration << std::endl;
 		o << fps << std::endl;
 		o << gain;
-		o << GetWidth();
-		o << GetHeight();
 		o.close();
 
         // Capture live video
@@ -287,7 +298,7 @@ void CIdsSimpleLiveDlg::OnButtonStart()
 		double exposure = 1000 / fps;
 
 		is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);       
-    }
+	  }
 	std::cout << "Done";
 }
 
@@ -323,14 +334,12 @@ void CIdsSimpleLiveDlg::OnButtonStop()
 ///////////////////////////////////////////////////////////////////////////////
 void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 {
-	
-
     if ( m_hCam == 0 )
         OpenCamera();
 
-    if ( m_hCam != 0 )
-    {
-		int duration;
+	if (m_hCam != 0)
+	{
+		double duration;
 		double fps;
 		double gain;
 
@@ -350,23 +359,30 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		//CIdsSimpleLiveDlg::SetLengthStr(duration);
 		CIdsSimpleLiveDlg::SetFPSStr(fps);
 		//CIdsSimpleLiveDlg::SetGainStr(gain);
-		
-		int frameCount = duration*fps/1000;
+
+		int frameCount = duration * fps / 1000;
+		int frameCount1 = 1 + 1.1 * duration * fps / 1000;
+		double duration1 = 1.1 * duration;
 
 		std::ofstream f;
 		f.open("output.txt");
-		f << "Framecount: " << frameCount;
+		std::time_t stamp = std::time(nullptr);
+		std::string namestr = std::ctime(&stamp);
+		namestr.erase(std::remove(namestr.begin(), namestr.end(), ' '), namestr.end());
+		namestr.erase(std::remove(namestr.begin(), namestr.end(), ':'), namestr.end());
+		namestr.erase(std::remove(namestr.begin(), namestr.end(), '\n'), namestr.end());
+		f << namestr + ".bin";
 		f.close();
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 
-		char** ppcImageMem = new char*[frameCount];
-		INT* pid = new INT[frameCount];
+		char** ppcImageMem = new char* [frameCount1];
+		INT* pid = new INT[frameCount1];
 		INT width = GetWidth();
 		INT height = GetHeight();
 		INT depth = 10;
 
-		for (int i = 0; i < frameCount; i++)
+		for (int i = 0; i < frameCount1; i++)
 		{
 			is_AllocImageMem(m_hCam, width, height, depth, &(ppcImageMem[i]), &(pid[i]));
 			is_AddToSequence(m_hCam, ppcImageMem[i], pid[i]);
@@ -376,9 +392,6 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		int diff;
 
 		bool go_on = 1;
-		int timeout = duration;
-
-		int temp_counter = 0;
 
 		SYSTEMTIME starttime;
 		SYSTEMTIME time;
@@ -395,7 +408,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		{
 			GetSystemTime(&time);
 			diff = (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
-			if (diff > duration)
+			if (diff > duration1)
 			{
 				go_on = 0;
 			}
@@ -406,23 +419,23 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		}
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
-		int size = (width * int((depth + 7) / 8))*height;
-		std::ofstream binary_stream("sequence.bin", std::ios::binary);
+		int size = (width * int((depth + 7) / 8)) * height;
+
+
+		std::ofstream binary_stream("output/" + namestr + ".bin", std::ios::binary);
+
+		int intwidth = CIdsSimpleLiveDlg::WIDTH;
+		int intheight = CIdsSimpleLiveDlg::HEIGHT;
+		binary_stream.write(reinterpret_cast<char const*>(&intwidth), 8);
+		binary_stream.write(reinterpret_cast<char const*>(&intheight), 8);
+		binary_stream.write(reinterpret_cast<char const*>(&fps), 8);
+
 		for (int i = 0; i < frameCount; i++)
 		{
 			binary_stream.write(reinterpret_cast<char const *>(ppcImageMem[i]), size);
 		}
 		binary_stream.close();
 		FreeImageMems();
-
-		//CIdsSimpleLiveDlg::OnButtonStart();
-
-		/*for (int i = 0; i < frameCount; i++)
-		{
-			//is_AllocImageMem(m_hCam, width, height, depth, &(ppcImageMem[i]), &(pid[i]));
-			is_FreeImageMem(m_hCam, ppcImageMem[i], pid[i]);
-			//is_SetAllocatedImageMem(m_hCam, width, height, depth, ppcImageMem[i], &(pid[i]));
-		}*/
     }
 }
 

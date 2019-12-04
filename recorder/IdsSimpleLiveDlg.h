@@ -126,6 +126,8 @@ private:
 
 	INT DURATION;
 
+	void CIdsSimpleLiveDlg::OnOK(void);
+
 public:
 	//parameter controls
 	std::string GetGainStr();
