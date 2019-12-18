@@ -295,8 +295,10 @@ void CIdsSimpleLiveDlg::OnButtonStart()
         // Capture live video
         is_CaptureVideo( m_hCam, IS_WAIT );
 		is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
+		gain = is_SetHWGainFactor(m_hCam, IS_GET_MASTER_GAIN_FACTOR, gain);
 		double exposure = 1000 / fps;
 
+		CIdsSimpleLiveDlg::SetGainStr(gain);
 		is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);       
 	  }
 	std::cout << "Done";
@@ -436,6 +438,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		}
 		binary_stream.close();
 		FreeImageMems();
+		OnButtonStart();
     }
 }
 
