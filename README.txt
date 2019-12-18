@@ -2,11 +2,10 @@ Download notes:
 You only need these files to use this program:
 recorder/recorder.exe
 recorder/config.txt
-recorder/ueye_converter.py
-Don't download the whole repository if you don't plan on modifying it.
+You don't need to download the whole repository if you don't plan on modifying it.
 
 Installation notes:
-*if you have already installed ueye camera on this system, proceed to step 6*
+*if you have already installed ueye camera on this system, proceed to the step 6*
 1.If you don't have account on https://en.ids-imaging.com , create one, it's free and doesn't require serial numbers
 2.Log in and download the latest driver from https://en.ids-imaging.com/download-ueye-win64.html . You only need Batch installer (~80 MB)
 3.Extract all the files from downloaded archive into any location and launch the .exe file
