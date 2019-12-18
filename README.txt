@@ -19,5 +19,5 @@ Using recorder app (recorder.exe):
 0.Set desired sequence length in ms in config.txt.
 1.The area in the center is the central 120*120 area of camera view, which is going to be recorded.
 2.The "Start Capture" button starts recording a sequence.
-3.Recorded sequence is always named "sequence.bin" and is located in the same folder as IdsSimpleLive.exe
-4.You may use the "ueye_converter.py" python script to convert sequence into .mat files, which are compatible with rhythm-1.2
+3.Recorded sequence appears in the "output" folder and have a timestamp as their filename.
+4."*.bin" files are supported by Rhythm-1.2
