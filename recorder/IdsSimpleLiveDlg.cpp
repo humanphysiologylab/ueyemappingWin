@@ -39,6 +39,10 @@
 #include <sstream>
 #include <ctime>
 #include <algorithm>
+#include <string>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 extern CIdsSimpleLiveApp theApp;
 
@@ -64,10 +68,11 @@ CIdsSimpleLiveDlg::CIdsSimpleLiveDlg(CWnd* pParent /*=NULL*/)
 
 void CIdsSimpleLiveDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_EDIT_GAIN, editGain);
-	DDX_Control(pDX, IDC_EDIT_FPS, editFps);
-	DDX_Control(pDX, IDC_EDIT_LENGTH, editLength);
+    CDialog::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_EDIT_GAIN, editGain);
+    DDX_Control(pDX, IDC_EDIT_FPS, editFps);
+    DDX_Control(pDX, IDC_EDIT_LENGTH, editLength);
+    DDX_Control(pDX, IDC_EDIT_PREFIX, editPrefix);
 }
 
 std::string CIdsSimpleLiveDlg::GetGainStr()
@@ -118,6 +123,15 @@ void CIdsSimpleLiveDlg::SetLengthStr(double x)
 	SetDlgItemText(IDC_EDIT_LENGTH, str);
 }
 
+std::string CIdsSimpleLiveDlg::GetPrefixStr()
+{
+    CString prefix;
+    GetDlgItemText(IDC_EDIT_PREFIX, prefix);
+    CT2CA converted(prefix);
+    std::string strStd(converted);
+    return strStd;
+}
+
 void CIdsSimpleLiveDlg::SetWidth(int width)
 {
 	WIDTH = width;
@@ -151,6 +165,7 @@ BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
     ON_BN_CLICKED(IDC_BUTTON_LOAD_PARAMETER, OnBnClickedButtonLoadParameter)
     ON_WM_CLOSE()
 	ON_STN_CLICKED(IDC_DISPLAY, &CIdsSimpleLiveDlg::OnStnClickedDisplay)
+    ON_BN_CLICKED(IDC_BUTTON_LISTEN, &CIdsSimpleLiveDlg::OnBnClickedButtonListen)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -197,8 +212,8 @@ BOOL CIdsSimpleLiveDlg::OnInitDialog()
 	double duration = 5000;
 	double fps = 1000;
 	double gain = 400;
-	int width = 120;
-	int height = 120;
+	int width = 200;
+	int height = 200;
 
 	std::ifstream f;
 	f.open("config.txt");
@@ -322,10 +337,6 @@ void CIdsSimpleLiveDlg::OnButtonStop()
     //GetDlgItem(IDC_BUTTON_LOAD_PARAMETER)->EnableWindow(TRUE);  CHANGED
 }
 
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // METHOD CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
@@ -422,9 +433,13 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 
 		is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
 		int size = (width * int((depth + 7) / 8)) * height;
+        int filecount = 0;
+        std::string path = "output/";
+        for (const auto& entry : fs::directory_iterator(path))
+            filecount++;
 
-
-		std::ofstream binary_stream("output/" + namestr + ".bin", std::ios::binary);
+        std::string prefix = CIdsSimpleLiveDlg::GetPrefixStr();
+		std::ofstream binary_stream("output/" + std::to_string(filecount) + "_" + prefix + "_" + namestr + ".bin", std::ios::binary);
 
 		int intwidth = CIdsSimpleLiveDlg::WIDTH;
 		int intheight = CIdsSimpleLiveDlg::HEIGHT;
@@ -844,4 +859,29 @@ INT CIdsSimpleLiveDlg::GetLastMem(char** ppLastMem, INT& lMemoryId, INT& lSequen
 void CIdsSimpleLiveDlg::OnStnClickedDisplay()
 {
 	// TODO: Add your control notification handler code here
+}
+
+
+void CIdsSimpleLiveDlg::OnBnClickedButtonListen()
+{
+    int go_on = 1;
+    int state;
+    UINT nCommand = IS_IO_CMD_GPIOS_GET_CONFIGURATION;
+
+    IO_GPIO_CONFIGURATION gpioConfiguration;
+
+    gpioConfiguration.u32Gpio = IO_GPIO_1;
+    gpioConfiguration.u32Configuration = IS_GPIO_OUTPUT;
+    //gpioConfiguration.u32State = 0;
+    INT nRet = IS_SUCCESS;
+    while (go_on)
+    {
+        nRet = is_IO(m_hCam, nCommand, (void*)&gpioConfiguration, sizeof(gpioConfiguration));
+        if (gpioConfiguration.u32State == 0)
+        {
+            go_on = 0;
+        }
+        
+    }
+    OnBnClickedButtonLoadParameter();
 }

@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "IdsSimpleLive.h"
 #include "IdsSimpleLiveDlg.h"
+#include <string>
+#include <iostream>
+#include <filesystem>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

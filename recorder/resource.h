@@ -22,6 +22,7 @@
 #define IDC_RADIO_PAL                   1004
 #define IDC_BUTTON_LOAD_PARAMETER       1004
 #define IDC_RADIO_NTSC                  1005
+#define IDC_BUTTON_LISTEN               1005
 #define IDC_STATIC_LOGO                 1006
 #define IDC_STATIC_COPYRIGHT            1007
 #define IDC_EDIT2                       1009
@@ -29,7 +30,9 @@
 #define IDC_EDIT_FPS                    1010
 #define IDC_                            1011
 #define IDC_EDIT_LENGTH                 1012
+#define IDC_EDIT_PREFIX                 1013
 #define IDC_CUSTOM1                     1014
+#define IDC_EDIT1                       1015
 
 // Next default values for new objects
 // 
@@ -37,7 +40,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        140
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

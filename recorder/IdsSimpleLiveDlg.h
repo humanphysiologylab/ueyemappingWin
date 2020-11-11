@@ -120,6 +120,7 @@ private:
 	CEdit editFps;
 	CEdit editGain;
 	CEdit editLength;
+	CEdit editPrefix;
 
 	INT WIDTH;
 	INT HEIGHT;
@@ -133,6 +134,7 @@ public:
 	std::string GetGainStr();
 	std::string GetFPSStr();
 	std::string GetLengthStr();
+	std::string GetPrefixStr();
 	void SetGainStr(double x);
 	void SetFPSStr(double x);
 	void SetLengthStr(double x);
@@ -146,6 +148,7 @@ public:
 	void SetDuration(int duration);
 
 	afx_msg void OnStnClickedDisplay();
+	afx_msg void OnBnClickedButtonListen();
 };
 
 #endif // !defined(AFX_IDSSIMPLELIVEDLG_H__00EFA87C_7A28_4501_8760_D28D4F306A00__INCLUDED_)
