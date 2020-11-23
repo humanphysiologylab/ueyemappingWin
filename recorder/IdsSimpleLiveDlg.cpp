@@ -352,7 +352,8 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 
 	if (m_hCam != 0)
 	{
-		double duration;
+        CreateDirectoryA("output", NULL);
+        double duration;
 		double fps;
 		double gain;
 
@@ -438,20 +439,25 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
         for (const auto& entry : fs::directory_iterator(path))
             filecount++;
 
-        std::string prefix = CIdsSimpleLiveDlg::GetPrefixStr();
-		std::ofstream binary_stream("output/" + std::to_string(filecount) + "_" + prefix + "_" + namestr + ".bin", std::ios::binary);
+        
 
 		int intwidth = CIdsSimpleLiveDlg::WIDTH;
 		int intheight = CIdsSimpleLiveDlg::HEIGHT;
-		binary_stream.write(reinterpret_cast<char const*>(&intwidth), 8);
-		binary_stream.write(reinterpret_cast<char const*>(&intheight), 8);
-		binary_stream.write(reinterpret_cast<char const*>(&fps), 8);
-
-		for (int i = 0; i < frameCount; i++)
-		{
-			binary_stream.write(reinterpret_cast<char const *>(ppcImageMem[i]), size);
-		}
-		binary_stream.close();
+        std::wstring dir = L"output";
+        std::string prefix = CIdsSimpleLiveDlg::GetPrefixStr();
+        std::ofstream binary_stream("output/" + std::to_string(filecount) + "_" + prefix + "_" + namestr + ".bin", std::ios::binary);
+        binary_stream.write(reinterpret_cast<char const*>(&intwidth), 8);
+        binary_stream.write(reinterpret_cast<char const*>(&intheight), 8);
+        binary_stream.write(reinterpret_cast<char const*>(&fps), 8);
+        
+        for (int i = 0; i < frameCount; i++)
+            {
+               
+                
+                binary_stream.write(reinterpret_cast<char const*>(ppcImageMem[i]), size);
+                
+            }
+        binary_stream.close();
 		FreeImageMems();
 		OnButtonStart();
     }
