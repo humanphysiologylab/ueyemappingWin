@@ -385,6 +385,44 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		namestr.erase(std::remove(namestr.begin(), namestr.end(), ' '), namestr.end());
 		namestr.erase(std::remove(namestr.begin(), namestr.end(), ':'), namestr.end());
 		namestr.erase(std::remove(namestr.begin(), namestr.end(), '\n'), namestr.end());
+        std::string month = "00";
+        if (namestr.substr(3, 3) == "Jan") {
+            month = "01";
+        }
+        else if (namestr.substr(3, 3) == "Feb") {
+            month = "02";
+        }
+        else if (namestr.substr(3, 3) == "Mar") {
+            month = "03";
+        }
+        else if (namestr.substr(3, 3) == "Apr") {
+            month = "04";
+        }
+        else if (namestr.substr(3, 3) == "May") {
+            month = "05";
+        }
+        else if (namestr.substr(3, 3) == "Jun") {
+            month = "06";
+        }
+        else if (namestr.substr(3, 3) == "Jul") {
+            month = "07";
+        }
+        else if (namestr.substr(3, 3) == "Aug") {
+            month = "08";
+        }
+        else if (namestr.substr(3, 3) == "Sep") {
+            month = "09";
+        }
+        else if (namestr.substr(3, 3) == "Oct") {
+            month = "10";
+        }
+        else if (namestr.substr(3, 3) == "Nov") {
+            month = "11";
+        }
+        else if (namestr.substr(3, 3) == "Dec") {
+            month = "12";
+        }
+        namestr = namestr.substr(6,2) + "_" + month + "_" + namestr.substr(14,4);
 		f << namestr + ".bin";
 		f.close();
 
