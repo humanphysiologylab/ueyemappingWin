@@ -24,6 +24,7 @@
 #define IDC_RADIO_NTSC                  1005
 #define IDC_BUTTON_LISTEN               1005
 #define IDC_STATIC_LOGO                 1006
+#define IDC_BUTTON_LOAD_PARAMETER2      1006
 #define IDC_STATIC_COPYRIGHT            1007
 #define IDC_EDIT2                       1009
 #define IDC_EDIT_GAIN                   1009
@@ -32,7 +33,9 @@
 #define IDC_EDIT_LENGTH                 1012
 #define IDC_EDIT_PREFIX                 1013
 #define IDC_CUSTOM1                     1014
+#define IDC_2                           1014
 #define IDC_EDIT1                       1015
+#define IDC_EDIT_LENGTH2                1015
 
 // Next default values for new objects
 // 

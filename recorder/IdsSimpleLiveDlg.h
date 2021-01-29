@@ -134,6 +134,7 @@ public:
 	std::string GetGainStr();
 	std::string GetFPSStr();
 	std::string GetLengthStr();
+	std::string GetLongLengthStr();
 	std::string GetPrefixStr();
 	void SetGainStr(double x);
 	void SetFPSStr(double x);
@@ -149,6 +150,8 @@ public:
 
 	afx_msg void OnStnClickedDisplay();
 	afx_msg void OnBnClickedButtonListen();
+	afx_msg
+	void OnBnClickedLongCapture();
 };
 
 #endif // !defined(AFX_IDSSIMPLELIVEDLG_H__00EFA87C_7A28_4501_8760_D28D4F306A00__INCLUDED_)

@@ -23,6 +23,7 @@ BEGIN_MESSAGE_MAP(CIdsSimpleLiveApp, CWinApp)
 		//    DO NOT EDIT what you see in these blocks of generated code!
 	//}}AFX_MSG
 	ON_COMMAND(ID_HELP, CWinApp::OnHelp)
+	ON_BN_CLICKED(IDC_BUTTON_LOAD_PARAMETER2, &CIdsSimpleLiveApp::OnBnClickedLongCapture)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -87,4 +88,10 @@ BOOL CIdsSimpleLiveApp::InitInstance()
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;
+}
+
+
+void CIdsSimpleLiveApp::OnBnClickedLongCapture()
+{
+	// TODO: Add your control notification handler code here
 }

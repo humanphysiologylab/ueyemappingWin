@@ -293,6 +293,8 @@
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TimerParam.cpp" />
+    <ClCompile Include="toSave.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\uEye.h" />
@@ -300,6 +302,8 @@
     <ClInclude Include="IdsSimpleLiveDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="TimerParam.h" />
+    <ClInclude Include="toSave.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\IdsSimpleLive.ico" />

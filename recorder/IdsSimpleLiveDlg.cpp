@@ -41,6 +41,10 @@
 #include <algorithm>
 #include <string>
 #include <filesystem>
+#include "TimerParam.h"
+#include "toSave.h"
+#include <chrono>
+#include "ueye.h"
 
 namespace fs = std::filesystem;
 
@@ -100,6 +104,15 @@ std::string CIdsSimpleLiveDlg::GetLengthStr()
 	CT2CA converted(cs);
 	std::string strStd(converted);
 	return strStd;
+}
+
+std::string CIdsSimpleLiveDlg::GetLongLengthStr()
+{
+    CString cs;
+    GetDlgItemText(IDC_EDIT_LENGTH2, cs);
+    CT2CA converted(cs);
+    std::string strStd(converted);
+    return strStd;
 }
 
 void CIdsSimpleLiveDlg::SetGainStr(double x)
@@ -166,6 +179,7 @@ BEGIN_MESSAGE_MAP(CIdsSimpleLiveDlg, CDialog)
     ON_WM_CLOSE()
 	ON_STN_CLICKED(IDC_DISPLAY, &CIdsSimpleLiveDlg::OnStnClickedDisplay)
     ON_BN_CLICKED(IDC_BUTTON_LISTEN, &CIdsSimpleLiveDlg::OnBnClickedButtonListen)
+    ON_BN_CLICKED(IDC_BUTTON_LOAD_PARAMETER2, &CIdsSimpleLiveDlg::OnBnClickedLongCapture)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -345,6 +359,7 @@ void CIdsSimpleLiveDlg::OnButtonStop()
 //              - reallocates the memory
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 {
     if ( m_hCam == 0 )
@@ -459,7 +474,7 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonLoadParameter()
 		while (go_on)
 		{
 			GetSystemTime(&time);
-			diff = (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
+            diff = (time.wHour - starttime.wHour) * 3600.0 * 1.0e3 + (time.wMinute - starttime.wMinute) * 60.0 * 1.0e3 + (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
 			if (diff > duration1)
 			{
 				go_on = 0;
@@ -928,4 +943,214 @@ void CIdsSimpleLiveDlg::OnBnClickedButtonListen()
         
     }
     OnBnClickedButtonLoadParameter();
+}
+
+UINT WriteThread(LPVOID pParam)
+{
+    toSave* pSave = (toSave*)pParam;
+    std::wstring dir = L"output";
+    //std::string prefix = CIdsSimpleLiveDlg::GetPrefixStr();
+    std::ofstream binary_stream(pSave->final_namestr, std::ios::binary);
+    binary_stream.write(reinterpret_cast<char const*>(&(pSave->width)), 8);
+    binary_stream.write(reinterpret_cast<char const*>(&(pSave->height)), 8);
+    binary_stream.write(reinterpret_cast<char const*>(&(pSave->fps)), 8);
+    int depth = 10;
+    int size = (pSave->width * int((depth + 7) / 8)) * pSave->height;
+    for (int i = pSave->start; i < pSave->length; i++)
+    {
+        binary_stream.write(reinterpret_cast<char const*>(pSave->ppcImageMem[i]), size);
+    }
+    binary_stream.close();
+    return 0;   // thread completed successfully
+}
+
+// inside a different function in the program
+//pNewObject = new CMyObject;
+//AfxBeginThread(MyThreadProc, pNewObject);
+
+UINT TimerThread(LPVOID pParam)
+{
+    TimerParam* pTimer = (TimerParam*)pParam;
+    SYSTEMTIME time;
+    SYSTEMTIME starttime;
+    GetSystemTime(&starttime);
+    //auto start = std::chrono::steady_clock::now();
+    //auto end = std::chrono::steady_clock::now();
+
+    //std::chrono::milliseconds<double> elapsed_seconds;
+
+    int go_on = 1;
+    double diff = 0;
+    while (go_on) //first time wait for 1.5*duration
+    {
+        GetSystemTime(&time);
+        diff = (time.wHour - starttime.wHour) * 60.0 + (time.wMinute - starttime.wMinute) * 60.0 + (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
+        if (diff > 1.5*(pTimer->duration))
+        {
+            go_on = 0;
+        }
+        else if (diff < 0)
+        {
+            go_on = 0;
+        }
+    }
+    AfxBeginThread(WriteThread, pTimer->writeParamFirst);
+    while (go_on) //second time wait for 1 duration
+    {
+        GetSystemTime(&time);
+        diff = (time.wHour - starttime.wHour) * 60.0 + (time.wMinute - starttime.wMinute) * 60.0 + (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
+        if (diff > 1.5 * (pTimer->duration))
+        {
+            go_on = 0;
+        }
+        else if (diff < 0)
+        {
+            go_on = 0;
+        }
+    }
+    AfxBeginThread(WriteThread, pTimer->writeParamSecond);
+    for (int i = 1; i < pTimer->count; i++) {
+        go_on = 1;
+        while (go_on)
+        {
+            GetSystemTime(&time);
+            diff = (time.wHour - starttime.wHour) * 60.0 + (time.wMinute - starttime.wMinute) * 60.0 + (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
+            if (diff > pTimer->duration)
+            {
+                go_on = 0;
+            }
+            else if (diff < 0)
+            {
+                go_on = 0;
+            }
+        }
+        AfxBeginThread(WriteThread, pTimer->writeParamFirst);
+        go_on = 1;
+        while (go_on)
+        {
+            GetSystemTime(&time);
+            diff = (time.wHour - starttime.wHour) * 60.0 + (time.wMinute - starttime.wMinute) * 60.0 + (time.wSecond - starttime.wSecond) * 1.0e3 + (time.wMilliseconds - starttime.wMilliseconds);
+            if (diff > pTimer->duration)
+            {
+                go_on = 0;
+            }
+            else if (diff < 0)
+            {
+                go_on = 0;
+            }
+        }
+        AfxBeginThread(WriteThread, pTimer->writeParamSecond);
+    }
+    //FreeImageMems();
+    //OnButtonStart();
+    return 0;
+}
+
+void CIdsSimpleLiveDlg::OnBnClickedLongCapture()
+{
+    if (m_hCam == 0)
+        OpenCamera();
+
+    if (m_hCam != 0)
+    {
+        CreateDirectoryA("output", NULL);
+        double duration;
+        double fps;
+        double gain;
+
+        duration = std::stod(CIdsSimpleLiveDlg::GetLongLengthStr());
+        fps = std::stod(CIdsSimpleLiveDlg::GetFPSStr());
+        gain = std::stod(CIdsSimpleLiveDlg::GetGainStr());
+
+        is_SetFrameRate(m_hCam, fps, &fps);
+
+        //CIdsSimpleLiveDlg::SetLengthStr(duration);
+        CIdsSimpleLiveDlg::SetFPSStr(fps);
+        //CIdsSimpleLiveDlg::SetGainStr(gain);
+
+        //int i = 0; //buffer counter
+
+        int bufferFrameCount = 500;
+
+        int buffCount = (duration * fps + bufferFrameCount - 1) / bufferFrameCount; //quick ceiling divide
+
+        float halfBufferDuration = (bufferFrameCount / static_cast<float>(2)) * (1000 /fps);
+
+        char** buffer = new char* [bufferFrameCount];
+        INT* pid = new INT[bufferFrameCount];
+        INT width = GetWidth();
+        INT height = GetHeight();
+        INT depth = 10;
+
+        for (int i = 0; i < bufferFrameCount; i++)
+        {
+            is_AllocImageMem(m_hCam, width, height, depth, &(buffer[i]), &(pid[i]));
+            is_AddToSequence(m_hCam, buffer[i], pid[i]);
+            is_SetAllocatedImageMem(m_hCam, width, height, depth, buffer[i], &(pid[i]));
+        }
+
+        std::ofstream f;
+        f.open("output.txt");
+        std::time_t stamp = std::time(nullptr);
+        std::string namestr = std::ctime(&stamp);
+        namestr.erase(std::remove(namestr.begin(), namestr.end(), ' '), namestr.end());
+        namestr.erase(std::remove(namestr.begin(), namestr.end(), ':'), namestr.end());
+        namestr.erase(std::remove(namestr.begin(), namestr.end(), '\n'), namestr.end());
+        std::string month = "00";
+        if (namestr.substr(3, 3) == "Jan") {
+            month = "01";
+        }
+        else if (namestr.substr(3, 3) == "Feb") {
+            month = "02";
+        }
+        else if (namestr.substr(3, 3) == "Mar") {
+            month = "03";
+        }
+        else if (namestr.substr(3, 3) == "Apr") {
+            month = "04";
+        }
+        else if (namestr.substr(3, 3) == "May") {
+            month = "05";
+        }
+        else if (namestr.substr(3, 3) == "Jun") {
+            month = "06";
+        }
+        else if (namestr.substr(3, 3) == "Jul") {
+            month = "07";
+        }
+        else if (namestr.substr(3, 3) == "Aug") {
+            month = "08";
+        }
+        else if (namestr.substr(3, 3) == "Sep") {
+            month = "09";
+        }
+        else if (namestr.substr(3, 3) == "Oct") {
+            month = "10";
+        }
+        else if (namestr.substr(3, 3) == "Nov") {
+            month = "11";
+        }
+        else if (namestr.substr(3, 3) == "Dec") {
+            month = "12";
+        }
+        namestr = "output/" + namestr.substr(6, 2) + "_" + month + "_" + namestr.substr(14, 4) + ".bin";
+        f << namestr;
+        f.close();
+
+        is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
+
+        is_SetFrameRate(m_hCam, fps, &fps);
+        double exposure = 0;
+
+        //is_SetHWGainFactor(m_hCam, IS_SET_MASTER_GAIN_FACTOR, gain);
+        is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, 8);
+        toSave* writeParam_first = new toSave(buffer, 0, bufferFrameCount / 2, width, height, fps, namestr);
+        toSave* writeParam_second = new toSave(buffer, bufferFrameCount / 2, bufferFrameCount, width, height, fps, namestr);
+        TimerParam* ptimerParam = new TimerParam(halfBufferDuration, buffCount, writeParam_first, writeParam_second);
+
+        is_CaptureVideo(m_hCam, IS_DONT_WAIT);
+        AfxBeginThread(TimerThread, ptimerParam);
+        is_StopLiveVideo(m_hCam, IS_DONT_WAIT);
+        //AfxBeginThread(WriteThread, pTimer->writeParamSecond);
+    }
 }
